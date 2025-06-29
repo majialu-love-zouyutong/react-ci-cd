@@ -7,31 +7,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3 # 更新到v3
+        uses: actions/checkout@v3
 
+      # 第一步：先安装pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+
+      # 第二步：再配置Node.js和pnpm缓存
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-          cache: 'pnpm' # 启用pnpm缓存支持
+          cache: 'pnpm' # 此时pnpm已存在PATH中
 
-      # 修复关键点：必须显式安装pnpm
-      - name: Install pnpm
-        run: npm install -g pnpm@latest # 安装最新稳定版
-
+      # 后续步骤保持不变...
       - name: Cache
         id: cache-dependencies
         uses: actions/cache@v3
         with:
           path: |
-            ~/.pnpm-store  # pnpm专用缓存目录
+            ~/.pnpm-store
             **/node_modules
-          # 使用pnpm-lock代替yarn.lock
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Installing Dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile # 推荐使用frozen模式
+        run: pnpm install --frozen-lockfile
 
       - name: Running Lint
         run: pnpm lint
